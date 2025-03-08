@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Delete, Edit, Save, AddCircle } from "@mui/icons-material";
+import { Delete, Edit, Save, AddCircle, Person } from "@mui/icons-material";
+import backgroundImage from '../assets/wallpapers/4.jpg'; // Import the image here
 
 // Static players data
 const staticPlayers = [
@@ -83,7 +84,7 @@ const PlayerStats = () => {
     <div
       className="bg-black text-white min-h-screen p-6"
       style={{
-        backgroundImage: `url('./assets/8.jpg')`, // Replace with your image path
+        backgroundImage: `url(${backgroundImage})`, // Use the imported image here
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -95,12 +96,12 @@ const PlayerStats = () => {
         {players.map((player) => (
           <div
             key={player.id}
-            className="bg-orange-600 p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-orange-500"
+            className="bg-gradient-to-r from-red-800 via-maroon-700 to-black p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-red-600"
             onClick={() => handlePlayerClick(player)}
           >
-            <div>
+            <div className="flex items-center">
+              <Person fontSize="large" className="mr-2" /> {/* Person Icon */}
               <span className="text-lg font-semibold">{player.name}</span>
-              <p className="text-sm">{player.category}</p>
             </div>
             {isAdmin && (
               <button
@@ -117,68 +118,72 @@ const PlayerStats = () => {
         ))}
       </div>
 
+      {/* Modal for Player Details */}
       {selectedPlayer && (
-        <div className="bg-gray-900 p-6 mt-4 rounded-lg relative">
-          <button
-            onClick={() => setSelectedPlayer(null)}
-            className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded"
-          >
-            Close
-          </button>
-          {editMode ? (
-            <input
-              className="bg-gray-800 p-2 text-white w-full mb-2"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-          ) : (
-            <h2 className="text-xl font-bold">{selectedPlayer.name}</h2>
-          )}
+        <div className="fixed inset-0 flex justify-center items-center z-50">
+          <div className="bg-black bg-opacity-70 absolute inset-0" onClick={() => setSelectedPlayer(null)}></div>
+          <div className="bg-gray-900 p-6 rounded-lg relative w-3/4 max-w-3xl">
+            <button
+              onClick={() => setSelectedPlayer(null)}
+              className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded"
+            >
+              Close
+            </button>
+            {editMode ? (
+              <input
+                className="bg-gray-800 p-2 text-white w-full mb-2"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            ) : (
+              <h2 className="text-xl font-bold">{selectedPlayer.name}</h2>
+            )}
 
-          <p className="text-gray-400">Category: {selectedPlayer.category}</p>
-          <h3 className="text-lg font-semibold mt-4">Stats:</h3>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {Object.entries(selectedPlayer.stats).map(([key, value]) => (
-              <div key={key} className="p-2 bg-gray-800 rounded">
-                <span className="font-bold text-orange-500">{key}: </span>
+            <p className="text-gray-400">Category: {selectedPlayer.category}</p>
+            <h3 className="text-lg font-semibold mt-4">Stats:</h3>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {Object.entries(selectedPlayer.stats).map(([key, value]) => (
+                <div key={key} className="p-2 bg-gray-800 rounded">
+                  <span className="font-bold text-orange-500">{key}: </span>
+                  {editMode ? (
+                    <input
+                      className="bg-gray-700 p-1 text-white w-16"
+                      type="number"
+                      value={formData.stats[key]}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          stats: { ...formData.stats, [key]: e.target.value },
+                        })
+                      }
+                    />
+                  ) : (
+                    <span>{value}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {isAdmin && (
+              <div className="mt-4 flex justify-between items-center">
                 {editMode ? (
-                  <input
-                    className="bg-gray-700 p-1 text-white w-16"
-                    type="number"
-                    value={formData.stats[key]}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        stats: { ...formData.stats, [key]: e.target.value },
-                      })
-                    }
-                  />
+                  <button
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+                    onClick={handleSave}
+                  >
+                    <Save fontSize="small" /> Save
+                  </button>
                 ) : (
-                  <span>{value}</span>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+                    onClick={handleEdit}
+                  >
+                    <Edit fontSize="small" /> Edit
+                  </button>
                 )}
               </div>
-            ))}
+            )}
           </div>
-
-          {isAdmin && (
-            <div className="mt-4 flex justify-between items-center">
-              {editMode ? (
-                <button
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-                  onClick={handleSave}
-                >
-                  <Save fontSize="small" /> Save
-                </button>
-              ) : (
-                <button
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-                  onClick={handleEdit}
-                >
-                  <Edit fontSize="small" /> Edit
-                </button>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -186,7 +191,7 @@ const PlayerStats = () => {
         <div className="mt-6">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600"
+            className="bg-gradient-to-r from-red-800 via-maroon-700 to-black px-4 py-2 rounded hover:bg-red-600 text-white"
           >
             {showAddForm ? "Cancel" : "Add Player"}
             <AddCircle fontSize="small" />
@@ -207,7 +212,7 @@ const PlayerStats = () => {
               />
               <button
                 onClick={handleAddPlayer}
-                className="bg-green-500 px-4 py-2 rounded hover:bg-green-600"
+                className="bg-gradient-to-r from-red-800 via-maroon-700 to-black px-4 py-2 rounded hover:bg-red-600 text-white"
               >
                 Save Player
               </button>
