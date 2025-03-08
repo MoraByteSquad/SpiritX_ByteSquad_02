@@ -21,73 +21,75 @@ const TournamentSummary = () => {
   }, []);
 
   return (
-    <div className="p-8">
-      <Typography variant="h4" className="text-center text-blue-600 mb-6">
-        Tournament Summary
-      </Typography>
-      <Grid container spacing={4}>
-        {/* Total Runs */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card className="bg-blue-100 shadow-lg">
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <SportsCricket sx={{ color: 'green', fontSize: 40 }} />
-                <Typography variant="h5" className="ml-4">
-                  {stats.totalRuns}
+    <div className="h-screen bg-black text-white flex justify-center items-center">
+      <div className="w-full max-w-7xl p-4 sm:p-8">
+        <Typography variant="h4" className="text-center text-orange-600 mb-6">
+          Tournament Summary
+        </Typography>
+        <Grid container spacing={4}>
+          {/* Total Runs */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card className="bg-maroon-600 shadow-lg">
+              <CardContent>
+                <Box display="flex" alignItems="center">
+                  <SportsCricket sx={{ color: 'orange', fontSize: 40 }} />
+                  <Typography variant="h5" className="ml-4">
+                    {stats.totalRuns}
+                  </Typography>
+                </Box>
+                <Typography color="textSecondary" className="text-center mt-2">
+                  Total Runs
                 </Typography>
-              </Box>
-              <Typography color="textSecondary" className="text-center mt-2">
-                Total Runs
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Total Wickets */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card className="bg-yellow-100 shadow-lg">
-            <CardContent>
-              <Box display="flex" alignItems="center">
-                <ArrowUpward sx={{ color: 'orange', fontSize: 40 }} />
-                <Typography variant="h5" className="ml-4">
-                  {stats.totalWickets}
+          {/* Total Wickets */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card className="bg-orange-600 shadow-lg">
+              <CardContent>
+                <Box display="flex" alignItems="center">
+                  <ArrowUpward sx={{ color: 'black', fontSize: 40 }} />
+                  <Typography variant="h5" className="ml-4">
+                    {stats.totalWickets}
+                  </Typography>
+                </Box>
+                <Typography color="textSecondary" className="text-center mt-2">
+                  Total Wickets
                 </Typography>
-              </Box>
-              <Typography color="textSecondary" className="text-center mt-2">
-                Total Wickets
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Highest Run Scorer */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card className="bg-green-100 shadow-lg">
-            <CardContent>
-              <Typography variant="h6" className="text-center">
-                Highest Run Scorer
-              </Typography>
-              <Typography variant="h5" className="text-center text-blue-600">
-                {stats.highestRunScorer.name} - {stats.highestRunScorer.runs} Runs
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+          {/* Highest Run Scorer */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card className="bg-maroon-600 shadow-lg">
+              <CardContent>
+                <Typography variant="h6" className="text-center text-orange-600">
+                  Highest Run Scorer
+                </Typography>
+                <Typography variant="h5" className="text-center text-white">
+                  {stats.highestRunScorer.name} - {stats.highestRunScorer.runs} Runs
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Highest Wicket Taker */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card className="bg-red-100 shadow-lg">
-            <CardContent>
-              <Typography variant="h6" className="text-center">
-                Highest Wicket Taker
-              </Typography>
-              <Typography variant="h5" className="text-center text-blue-600">
-                {stats.highestWicketTaker.name} - {stats.highestWicketTaker.wickets} Wickets
-              </Typography>
-            </CardContent>
-          </Card>
+          {/* Highest Wicket Taker */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Card className="bg-black shadow-lg">
+              <CardContent>
+                <Typography variant="h6" className="text-center text-orange-600">
+                  Highest Wicket Taker
+                </Typography>
+                <Typography variant="h5" className="text-center text-white">
+                  {stats.highestWicketTaker.name} - {stats.highestWicketTaker.wickets} Wickets
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      </div>
     </div>
   );
 };
