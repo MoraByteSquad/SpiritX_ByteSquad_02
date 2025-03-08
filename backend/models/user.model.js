@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import UserTeam from "./userTeam.model.js";
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -24,6 +25,22 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const User = mongoose.model("User", userSchema);
+userSchema.post("save", async function (doc, next) {
+  try {
+    const userTeam = new UserTeam({ 
+      userId: doc._id,
+      remainingBudget: 9000000,
+      teamSize: 0,
+    });
+
+    await userTeam.save();
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+const User = mongoose.model("User", userSchema, "users");
 
 export default User;

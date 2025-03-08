@@ -6,6 +6,9 @@ import errorMiddleware from './middleware/error.middleware.js';
 import cookieParser from 'cookie-parser';
 
 import authRouter from './routes/auth.routes.js';
+import playerRouter from './routes/player.routes.js';
+import leaderboardRouter from './routes/leaderboard.routes.js';
+import userTeamRouter from './routes/userTeam.routes.js';
 
 const app = express();
 
@@ -17,6 +20,9 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/player', playerRouter);
+app.use('/api/v1/leaderboard', leaderboardRouter);
+app.use('/api/v1/user-team', userTeamRouter);
 
 app.get('/', (req, res) => {
   res.send('SpritX 2025 project by ByteSquad');

@@ -3,16 +3,14 @@ import { createPlayer, deletePlayer, getPlayers, getPlayer, updatePlayer } from 
 
 const playerRouter = Router();
 
-playerRouter.post('/createPlayer', createPlayer);
+playerRouter.post('/create-player', createPlayer);
 
-playerRouter.get('/getPlayers', getPlayers);    
+playerRouter.get('/get-players', getPlayers);    
 
-playerRouter.get('/getPlayer/:id', getPlayer);
+playerRouter.get('/get-player/:id', getPlayer);
 
-playerRouter.put('/updatePlayer/:id', updatePlayer);
+playerRouter.put('/update-player/:id', updatePlayer);
 
-playerRouter.delete('/deletePlayer/:id', deletePlayer);
-
-
+playerRouter.delete('/delete-player/:id', deletePlayer);
 
 export default playerRouter;

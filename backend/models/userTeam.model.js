@@ -18,9 +18,9 @@ const userTeamSchema = new mongoose.Schema({
         type: String,
         required: [true, "Player name is required"],
       },
-      role: {
-        type: String,
-        required: [true, "Role is required"],
+      points: {
+        type: Number,
+        required: [true, "Player points are required"],
       },
       category: {
         type: String,
@@ -58,6 +58,6 @@ const userTeamSchema = new mongoose.Schema({
   },
 });
 
-const UserTeam = mongoose.model("UserTeam", userTeamSchema);
+const UserTeam = mongoose.model("UserTeam", userTeamSchema, "userTeams");
 
 export default UserTeam;

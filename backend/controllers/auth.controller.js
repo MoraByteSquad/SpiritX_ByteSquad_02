@@ -16,7 +16,7 @@ const validatePassword = (password) => {
   return passwordRegex.test(password);
 }
 
-export const userSignUp = async (req, res, next) => {
+export const SignUp = async (req, res, next) => {
   const session = await mongoose.startSession(); // Start a session to handle transactions in MongoDB
   session.startTransaction(); // Start a transaction
 
@@ -67,7 +67,7 @@ export const userSignUp = async (req, res, next) => {
   }
 };
 
-export const UserSignIn = async (req, res, next) => {
+export const SignIn = async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
@@ -78,70 +78,32 @@ export const UserSignIn = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      const error = new Error('Invalid password');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    const token = jwt.sign({ userId: user._id, userName: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'Strict' });
 
     if (user.isAdmin) {
-      const error = new Error('Admins cannot sign in here');
-      error.statusCode = 403;
-      throw error;
+      res.status(200).json({ 
+        success: true,
+        message: 'Admin signed in successfully',
+        data: { token, isAdmin: user.isAdmin } 
+      });
+    } else {
+      res.status(200).json({ 
+        success: true,
+        message: 'User signed in successfully',
+        data: { token, isAdmin: user.isAdmin } 
+      });
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      const error = new Error('Invalid password');
-      error.statusCode = 401;
-      throw error;
-    }
-
-    const token = jwt.sign({ userId: user._id, userName: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'Strict' });
-
-    res.status(200).json({ 
-      success: true,
-      message: 'User signed in successfully',
-      data: { token } 
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const AdminSignIn = async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      const error = new Error('User not found');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (!user.isAdmin) {
-      const error = new Error('Only admins can sign in here');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      const error = new Error('Invalid password');
-      error.statusCode = 401;
-      throw error;
-    }
-
-    const token = jwt.sign({ userId: user._id, userName: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
-
-    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'Strict' });
-
-    res.status(200).json({ 
-      success: true,
-      message: 'User signed in successfully',
-      data: { token } 
-    });
   } catch (error) {
     next(error);
   }
