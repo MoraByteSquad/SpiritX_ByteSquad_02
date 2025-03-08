@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Delete, Edit, Save, AddCircle } from "@mui/icons-material";
 
 const staticPlayers = [
   {
@@ -80,16 +81,28 @@ const PlayerStats = () => {
   return (
     <div className="bg-black text-white min-h-screen p-6">
       <h1 className="text-3xl text-red-600 font-bold mb-4">Player Stats</h1>
-      <div className="flex gap-4 flex-wrap">
+
+      {/* Container for the player tabs */}
+      <div className="grid grid-cols-2 gap-6 mb-8">
         {players.map((player) => (
-          <div key={player.id} className="bg-orange-600 p-3 rounded-lg text-white relative flex items-center gap-2">
-            <button onClick={() => handlePlayerClick(player)}>{player.name} ({player.category})</button>
+          <div
+            key={player.id}
+            className="bg-orange-600 p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-orange-500"
+            onClick={() => handlePlayerClick(player)}
+          >
+            <div>
+              <span className="text-lg font-semibold">{player.name}</span>
+              <p className="text-sm">{player.category}</p>
+            </div>
             {isAdmin && (
               <button
-                onClick={() => handleDelete(player.id)}
-                className="bg-red-700 px-2 rounded hover:bg-red-800 ml-2"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent player click
+                  handleDelete(player.id);
+                }}
+                className="absolute top-2 right-2 bg-red-700 px-2 py-1 rounded hover:bg-red-800"
               >
-                ❌
+                <Delete fontSize="small" />
               </button>
             )}
           </div>
@@ -98,7 +111,12 @@ const PlayerStats = () => {
 
       {selectedPlayer && (
         <div className="bg-gray-900 p-6 mt-4 rounded-lg relative">
-          <button onClick={() => setSelectedPlayer(null)} className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded">Close</button>
+          <button
+            onClick={() => setSelectedPlayer(null)}
+            className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded"
+          >
+            Close
+          </button>
           {editMode ? (
             <input
               className="bg-gray-800 p-2 text-white w-full mb-2"
@@ -135,11 +153,21 @@ const PlayerStats = () => {
           </div>
 
           {isAdmin && (
-            <div className="mt-4">
+            <div className="mt-4 flex justify-between items-center">
               {editMode ? (
-                <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded" onClick={handleSave}>Save</button>
+                <button
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+                  onClick={handleSave}
+                >
+                  <Save fontSize="small" /> Save
+                </button>
               ) : (
-                <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded" onClick={handleEdit}>Edit</button>
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+                  onClick={handleEdit}
+                >
+                  <Edit fontSize="small" /> Edit
+                </button>
               )}
             </div>
           )}
@@ -148,14 +176,33 @@ const PlayerStats = () => {
 
       {isAdmin && (
         <div className="mt-6">
-          <button onClick={() => setShowAddForm(!showAddForm)} className="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600">
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600"
+          >
             {showAddForm ? "Cancel" : "Add Player"}
+            <AddCircle fontSize="small" />
           </button>
           {showAddForm && (
             <div className="mt-4 bg-gray-800 p-4 rounded">
-              <input className="bg-gray-700 p-2 text-white w-full mb-2" placeholder="Player Name" value={newPlayer.name} onChange={(e) => setNewPlayer({ ...newPlayer, name: e.target.value })} />
-              <input className="bg-gray-700 p-2 text-white w-full mb-2" placeholder="Category" value={newPlayer.category} onChange={(e) => setNewPlayer({ ...newPlayer, category: e.target.value })} />
-              <button onClick={handleAddPlayer} className="bg-green-500 px-4 py-2 rounded hover:bg-green-600">Save Player</button>
+              <input
+                className="bg-gray-700 p-2 text-white w-full mb-2"
+                placeholder="Player Name"
+                value={newPlayer.name}
+                onChange={(e) => setNewPlayer({ ...newPlayer, name: e.target.value })}
+              />
+              <input
+                className="bg-gray-700 p-2 text-white w-full mb-2"
+                placeholder="Category"
+                value={newPlayer.category}
+                onChange={(e) => setNewPlayer({ ...newPlayer, category: e.target.value })}
+              />
+              <button
+                onClick={handleAddPlayer}
+                className="bg-green-500 px-4 py-2 rounded hover:bg-green-600"
+              >
+                Save Player
+              </button>
             </div>
           )}
         </div>
