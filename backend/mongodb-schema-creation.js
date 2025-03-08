@@ -156,7 +156,7 @@ db.createCollection("userTeams", {
           description: "Array of selected players",
           items: {
             bsonType: "object",
-            required: ["playerId", "role", "value", "category"],
+            required: ["playerId", "points", "value", "category"],
             properties: {
               playerId: {
                 bsonType: "objectId",
@@ -166,9 +166,10 @@ db.createCollection("userTeams", {
                 bsonType: "string",
                 description: "Denormalized player name for quick access"
               },
-              role: {
-                bsonType: "string",
-                description: "Player's role in the team"
+              points: {
+                bsonType: "double",
+                minimum: 0,
+                description: "Player's calculated points"
               },
               category: {
                 bsonType: "string",
