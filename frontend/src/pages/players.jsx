@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Delete, Edit, Save, AddCircle } from "@mui/icons-material";
 
+// Static players data
 const staticPlayers = [
   {
     id: 1,
@@ -79,7 +80,14 @@ const PlayerStats = () => {
   };
 
   return (
-    <div className="bg-black text-white min-h-screen p-6">
+    <div
+      className="bg-black text-white min-h-screen p-6"
+      style={{
+        backgroundImage: `url('./assets/8.jpg')`, // Replace with your image path
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <h1 className="text-3xl text-red-600 font-bold mb-4">Player Stats</h1>
 
       {/* Container for the player tabs */}
