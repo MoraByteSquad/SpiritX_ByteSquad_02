@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 import UserTeam from '../models/userTeam.model.js';
+import Player from '../models/player.model.js';
+import PlayerValue from '../models/playerValue.model.js';
 
 export const getUserTeam = async (req, res, next) => {
   try {
@@ -30,20 +32,24 @@ export const addPlayerToTeam = async (req, res, next) => {
 
   try {
     const { id } = req.params;
-    const { playerId, name, points, category, value } = req.body;
+    const { playerId } = req.body;
 
-    // Validate required fields in request
-    if (!playerId || !name || !points || !category || value === undefined) {
-      throw new Error("All fields (playerId, name, points, category, value) are required");
+    if (!playerId) {
+      throw new Error("Player ID is required");
     }
 
-    // Ensure category is valid
-    const validCategories = ["Batsman", "Bowler", "All-Rounder"];
-    if (!validCategories.includes(category)) {
-      throw new Error("Invalid category. Must be 'Batsman', 'Bowler', or 'All-Rounder'");
+    // Find player details
+    const player = await Player.findById(playerId).session(session);
+    const playerValue = await PlayerValue.findOne({ playerId }).session(session);
+
+    if (!player || !playerValue) {
+      throw new Error("Player or player value not found");
     }
 
-    // Find user team within the transaction
+    const { name, category } = player;
+    const { value, points } = playerValue;
+
+    // Find user's team within the transaction
     const userTeam = await UserTeam.findOne({ userId: id }).session(session);
 
     if (!userTeam) {
@@ -51,7 +57,7 @@ export const addPlayerToTeam = async (req, res, next) => {
     }
 
     // Check if the player is already in the team
-    if (userTeam.players.some(player => player.playerId.toString() === playerId)) {
+    if (userTeam.players.some(p => p.playerId.toString() === playerId)) {
       throw new Error("Player is already in the team");
     }
 
@@ -114,12 +120,24 @@ export const removePlayerFromTeam = async (req, res, next) => {
       throw new Error('Player not found in team');
     }
 
-    const playerValue = userTeam.players[playerIndex].value;
-    const playerPoints = userTeam.players[playerIndex].points;
+    const removedPlayer = userTeam.players[playerIndex]; // Store player details before removing
+    const playerValue = removedPlayer.value;
+    const playerPoints = removedPlayer.points ?? 0; // Ensure points is never undefined
+
+    // Remove the player
     userTeam.players.splice(playerIndex, 1);
+
+    // Ensure remaining players have valid points before saving
+    userTeam.players = userTeam.players.map(player => ({
+      ...player,
+      points: player.points ?? 0, // Ensure every player has a points value
+    }));
+
+    // Correct totalPoints calculation
+    userTeam.totalPoints = userTeam.players.reduce((sum, player) => sum + (player.points || 0), 0);
+
     userTeam.remainingBudget += playerValue;
     userTeam.teamSize -= 1;
-    userTeam.totalPoints -= playerPoints;
     userTeam.isComplete = false;
 
     await userTeam.save({ session });
