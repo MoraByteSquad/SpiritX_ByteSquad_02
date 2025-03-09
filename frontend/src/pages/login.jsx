@@ -7,6 +7,7 @@ import SignupImage from '../assets/signup.jpg';
 function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const[error,setError]=useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -20,7 +21,8 @@ function Login() {
       login(role);
       navigate('/players');
     } catch (error) {
-      console.error('Login failed:', error.message);
+      alert(error.message);
+      setError(error.message);
     }
   };
 
