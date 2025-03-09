@@ -30,7 +30,7 @@ class ChatResponse(BaseModel):
 load_dotenv()
 
 # Initialize MongoDB connection
-mongo_uri = os.getenv("MONGO_URI")
+mongo_uri = os.getenv("DB_URI")
 mongo_client = MongoClient(mongo_uri)
 
 db = mongo_client[os.getenv("DB_NAME")]
