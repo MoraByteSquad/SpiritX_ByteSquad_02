@@ -125,7 +125,8 @@ def chat_with_llm(user_message: str):
         and mongodb aggregation pipeline input in second line onwards
         without any markdown formatting or explanations.
         when writing the aggregation pipeline query, keep in mind that in aggregation pipeline, you are only allowed to read data from the database,
-        you are not allowed to write to the database."""
+        you are not allowed to write to the database.
+        I use python syntax. so dont send null, send None"""
         
         response = chat_session.send_message(context)
         mongo_query = response.text.strip()
