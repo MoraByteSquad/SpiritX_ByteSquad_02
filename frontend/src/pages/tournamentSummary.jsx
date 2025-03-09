@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaArrowUp } from "react-icons/fa";
 import { GiCricketBat } from "react-icons/gi";
+import  {getTournamentSummary}  from '../api/team'; // Assuming your API function is in api.js
 
 const TournamentSummary = () => {
   const [stats, setStats] = useState({
@@ -11,12 +12,23 @@ const TournamentSummary = () => {
   });
 
   useEffect(() => {
-    setStats({
-      totalRuns: 1500,
-      totalWickets: 70,
-      highestRunScorer: { name: "Player 1", runs: 500 },
-      highestWicketTaker: { name: "Player 3", wickets: 20 },
-    });
+    // Fetch the tournament summary from API
+    const fetchSummary = async () => {
+      const summary = await getTournamentSummary();
+      if (summary.success) {
+        setStats({
+          totalRuns: summary.data.overallRuns,
+          totalWickets: summary.data.overallWickets,
+          highestRunScorer: summary.data.highestRunScorer,
+          highestWicketTaker: summary.data.highestWicketTaker,
+        });
+      } else {
+        // Handle any errors or show default values if fetching fails
+        console.error(summary.message);
+      }
+    };
+
+    fetchSummary();
   }, []);
 
   return (

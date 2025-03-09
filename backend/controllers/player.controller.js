@@ -104,6 +104,7 @@ export const updatePlayer = async (req, res, next) => {
 
   try {
     const { id } = req.params;
+    console.log(req.body);
     const { 
       stats: {
         total_runs,
@@ -114,7 +115,7 @@ export const updatePlayer = async (req, res, next) => {
         runs_conceded
       }
     } = req.body;
-
+    
     // Check if stats are provided correctly
     if (
       total_runs === undefined ||

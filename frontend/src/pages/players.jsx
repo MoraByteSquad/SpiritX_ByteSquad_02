@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Delete, Edit, Save, AddCircle, Person } from "@mui/icons-material";
-import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/team';  // Import API functions
+import { getPlayers,getPlayer, createPlayer, updatePlayer, deletePlayer } from '../api/team';  // Import API functions
 
 const Players = () => {
   const [players, setPlayers] = useState([]);
@@ -33,22 +33,32 @@ const Players = () => {
     fetchPlayers();
   }, []);
 
-  const handlePlayerClick = (player) => {
-    setSelectedPlayer(player);
-    setFormData({ ...player });
-    setEditMode(false);
-  };
+ 
 
   const handleEdit = () => setEditMode(true);
 
   const handleSave = async () => {
     try {
-      const response = await updatePlayer(formData._id, formData); // Call API to update
+      // Ensure the stats object is updated properly
+      const updatedData = {
+       // ...formData, // Spread the current player data
+        stats: {
+          total_runs: Number(formData.stats['Total Runs']),  // Map "Total Runs" to total_runs
+          balls_faced: Number(formData.stats['Balls Faced']), // Map "Balls Faced" to balls_faced
+          innings_played: Number(formData.stats['Innings Played']), // Map "Innings Played" to innings_played
+          wickets: Number(formData.stats['Wickets']),  // Map "Wickets" to wickets
+          overs_bowled: Number(formData.stats['Overs Bowled']), // Map "Overs Bowled" to overs_bowled
+          runs_conceded: Number(formData.stats['Runs Conceded']), // Map "Runs Conceded" to runs_conceded
+        },
+      };
   
-      if (response && response.success && response.data) {
-        setPlayers(players.map((p) => (p._id === response.data._id ? response.data : p))); // Update UI with response
-        setSelectedPlayer(response.data);
-        setEditMode(false);
+      console.log("Updating player:", formData._id, updatedData);
+      const response = await updatePlayer(formData._id, updatedData); // API call to update player
+      
+      if (response && response.success) {
+        setPlayers(players.map((p) => (p._id === response.data._id ? response.data : p))); // Update UI with the response data
+        setSelectedPlayer(response.data); // Update selected player details
+        setEditMode(false); // Exit edit mode
       } else {
         console.error("Error: Unexpected response format", response);
       }
@@ -56,6 +66,8 @@ const Players = () => {
       console.error("Error saving player:", error.message);
     }
   };
+  
+  
   
 
   const handleDelete = async (id) => {
@@ -93,7 +105,21 @@ const Players = () => {
     }
   };
   
-  
+  const handlePlayerClick = async (player) => {
+  setSelectedPlayer(null);  // Clear any previously selected player
+  try {
+    const playerDetails = await getPlayer(player._id);  // Fetch player details by ID
+    if (playerDetails.success) {
+      setSelectedPlayer(playerDetails.data);  // Set the full player details into the state
+      setFormData({ ...playerDetails.data });  // Set the form data for editing
+    } else {
+      console.error("Error fetching player details:", playerDetails.message);
+    }
+  } catch (error) {
+    console.error("Error fetching player:", error.message);
+  }
+};
+
   
 
   return (
@@ -128,73 +154,82 @@ const Players = () => {
       </div>
 
       {/* Modal for Player Details */}
-      {selectedPlayer && (
-        <div className="fixed inset-0 flex justify-center items-center z-50">
-          <div className="bg-black bg-opacity-70 absolute inset-0" onClick={() => setSelectedPlayer(null)}></div>
-          <div className="bg-gray-900 p-6 rounded-lg relative w-3/4 max-w-3xl">
-            <button
-              onClick={() => setSelectedPlayer(null)}
-              className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded"
-            >
-              Close
-            </button>
+     {/* Modal for Player Details */}
+     {selectedPlayer && (
+  <div className="fixed inset-0 flex justify-center items-center z-50">
+    <div className="bg-black bg-opacity-70 absolute inset-0" onClick={() => setSelectedPlayer(null)}></div>
+    <div className="bg-gray-900 p-6 rounded-lg relative w-3/4 max-w-3xl">
+      <button
+        onClick={() => setSelectedPlayer(null)}
+        className="absolute top-2 right-2 bg-red-600 px-3 py-1 rounded"
+      >
+        Close
+      </button>
+
+      {/* Display Player Name or Allow Editing */}
+      {editMode ? (
+        <input
+          className="bg-gray-800 p-2 text-white w-full mb-2"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+      ) : (
+        <h2 className="text-xl font-bold">{selectedPlayer.name}</h2>
+      )}
+
+      {/* Display Player Category */}
+      <p className="text-gray-400">Category: {selectedPlayer.category}</p>
+
+      {/* Display Stats */}
+      <h3 className="text-lg font-semibold mt-4">Stats:</h3>
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        {Object.entries(formData.stats).map(([key, value]) => (
+          <div key={key} className="p-2 bg-gray-800 rounded">
+            <span className="font-bold text-orange-500">{key.replace('_', ' ').toUpperCase()}: </span>
             {editMode ? (
               <input
-                className="bg-gray-800 p-2 text-white w-full mb-2"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="bg-gray-700 p-1 text-white w-16"
+                type="number"
+                value={value}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    stats: { ...formData.stats, [key]: e.target.value }, // Update the stat when changed
+                  })
+                }
               />
             ) : (
-              <h2 className="text-xl font-bold">{selectedPlayer.name}</h2>
-            )}
-
-            <p className="text-gray-400">Category: {selectedPlayer.category}</p>
-            <h3 className="text-lg font-semibold mt-4">Stats:</h3>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {Object.entries(selectedPlayer.stats).map(([key, value]) => (
-                <div key={key} className="p-2 bg-gray-800 rounded">
-                  <span className="font-bold text-orange-500">{key}: </span>
-                  {editMode ? (
-                    <input
-                      className="bg-gray-700 p-1 text-white w-16"
-                      type="number"
-                      value={formData.stats[key]}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          stats: { ...formData.stats, [key]: e.target.value },
-                        })
-                      }
-                    />
-                  ) : (
-                    <span>{value}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {isAdmin && (
-              <div className="mt-4 flex justify-between items-center">
-                {editMode ? (
-                  <button
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-                    onClick={handleSave}
-                  >
-                    <Save fontSize="small" /> Save
-                  </button>
-                ) : (
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-                    onClick={handleEdit}
-                  >
-                    <Edit fontSize="small" /> Edit
-                  </button>
-                )}
-              </div>
+              <span>{value}</span>
             )}
           </div>
+        ))}
+      </div>
+
+      {/* Admin Controls: Edit / Save */}
+      {isAdmin && (
+        <div className="mt-4 flex justify-between items-center">
+          {editMode ? (
+            <button
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+              onClick={handleSave}  // Calls the save function
+            >
+              <Save fontSize="small" /> Save
+            </button>
+          ) : (
+            <button
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
+              onClick={handleEdit}  // Switches to edit mode
+            >
+              <Edit fontSize="small" /> Edit
+            </button>
+          )}
         </div>
       )}
+    </div>
+  </div>
+)}
+
+
 
       {isAdmin && (
         <div className="mt-6">
