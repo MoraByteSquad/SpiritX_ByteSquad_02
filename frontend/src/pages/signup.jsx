@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod'; // Zod library for validation
 import { zodResolver } from '@hookform/resolvers/zod';
-import { checkUsername, signUp } from '../api/auth';
+import { signUp } from '../api/auth';
 import SignupImage from '../assets/signup.jpg'; 
 
 // Define the schema using Zod
 const schema = z.object({
   username: z.string().min(8, 'Username must be at least 8 characters long'),
-  email: z.string().email('Invalid email address'),
+
   password: z.string().min(8, 'Password must be at least 8 characters long'),
   confirmPassword: z.string().min(8, 'Confirm Password must be at least 8 characters long'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -21,7 +21,6 @@ const schema = z.object({
 export default function Signup() {
   const [form, setForm] = useState({
     username: '',
-    email: '',
     password: '',
     confirmPassword: '',
   });
@@ -30,27 +29,18 @@ export default function Signup() {
   const [authError, setAuthError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const { register, handleSubmit, formState: { errors }, setValue, trigger } = useForm({
+  const { register, handleSubmit, formState: { errors }, trigger } = useForm({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data) => {
     try {
-      // Check if the username exists
-      const usernameResponse = await checkUsername(data.username);
-      if (usernameResponse.exists) {
-        setAuthError('Username is already taken');
-        return;
-      }
-
-      // Proceed with the sign-up request if username is available
+      console.log(data);
       const response = await signUp(data);
-      if (response.status === 200) {
-        setSuccessMessage('Signup successful!');
-        setTimeout(() => {
-          window.location.href = '/login'; // Redirect after 2 seconds
-        }, 2000);
-      }
+      setSuccessMessage('Signup successful!');
+      setTimeout(() => {
+        window.location.href = '/login'; // Redirect after 2 seconds
+      }, 2000);
     } catch (error) {
       if (error.response && error.response.data) {
         setAuthError(error.response.data.message || 'Something went wrong!');
@@ -101,13 +91,6 @@ export default function Signup() {
       {/* Signup Form */}
       <div className="w-full max-w-md bg-white/10 backdrop-blur-lg p-8 shadow-lg rounded-lg sm:px-10 border border-white/30">
         <div className="text-center">
-          {/* <img
-            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-            alt="Your Company"
-            width={40}
-            height={40}
-            className="mx-auto"
-          /> */}
           <h2 className="mt-6 text-2xl font-bold text-white">Create a new account</h2>
         </div>
 
@@ -136,6 +119,7 @@ export default function Signup() {
             </div>
           </div>
 
+          
           {/* Password Field */}
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-white">
@@ -200,6 +184,7 @@ export default function Signup() {
             {form.confirmPassword && form.confirmPassword !== form.password && (
               <span className="text-red-500 text-sm">Passwords do not match</span>
             )}
+            {errors.confirmPassword && <span className="text-red-500 text-sm">{errors.confirmPassword.message}</span>}
           </div>
 
           {/* Signup Button */}
@@ -215,7 +200,7 @@ export default function Signup() {
 
         <p className="mt-6 text-center text-sm text-white">
           Already have an account?{' '}
-          <a href="/" className="font-medium text-indigo-300 hover:text-indigo-100">
+          <a href="/login" className="font-medium text-indigo-300 hover:text-indigo-100 cursor-pointer">
             Sign in
           </a>
         </p>
