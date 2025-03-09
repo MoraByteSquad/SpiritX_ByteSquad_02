@@ -40,7 +40,6 @@ export const createPlayer = async (req, res, next) => {
   }
 };
 
-
 export const deletePlayer = async (req, res, next) => {
   const session = await mongoose.startSession(); // Start a session to handle transactions in MongoDB
   session.startTransaction(); // Start a transaction
@@ -83,6 +82,11 @@ export const getPlayer = async (req, res, next) => {
     const { id } = req.params;
 
     const player = await Player.findById(id);
+    
+
+    if (!player) {
+      throw new Error('Player not found');
+    }
 
     res.status(200).json({ 
       success: true,
@@ -101,9 +105,6 @@ export const updatePlayer = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { 
-      name,
-      university,
-      category,
       stats: {
         total_runs,
         balls_faced,
@@ -133,9 +134,6 @@ export const updatePlayer = async (req, res, next) => {
     await Player.findByIdAndUpdate(
       id, 
       {
-        name, 
-        university, 
-        category, 
         stats: {
           "Total Runs": total_runs,
           "Balls Faced": balls_faced,
