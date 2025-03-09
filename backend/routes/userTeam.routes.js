@@ -5,8 +5,7 @@ import {
   removePlayerFromTeam, 
   getRemainingBudget, 
   getIsComplete,
-  getTotalPoints, 
-  updateTotalPoints 
+  getTotalPoints
 } from "../controllers/userTeam.controller.js";
 
 const userTeamRouter = Router();
@@ -22,5 +21,6 @@ userTeamRouter.get('/remaining-budget/:id', getRemainingBudget);
 userTeamRouter.get('/is-complete/:id', getIsComplete);
 
 userTeamRouter.get('/total-points/:id', getTotalPoints);
+
 
 export default userTeamRouter;
