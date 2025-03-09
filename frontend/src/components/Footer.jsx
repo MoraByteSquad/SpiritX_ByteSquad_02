@@ -2,9 +2,13 @@ import React from "react";
 
 function Footer() {
   return (
-    <div className="footer text-center bg-gradient-to-r from-black to-red-600 text-white p-3">
-      <p>© 2021 ByteSquad</p>
+    <div>
+      <div className="h-1 bg-white/50"></div>
+      <div className="text-center bg-black/50  backdrop-blur-lg text-white p-3">
+      <p>© ByteSquad</p>
     </div>
+    </div>
+    
   );
 }
 
