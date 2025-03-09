@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Delete, Edit, Save, AddCircle, Person } from "@mui/icons-material";
 import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/team';  // Import API functions
+import { useAuth } from "../context/AuthContext";
+
 
 const Players = () => {
   const [players, setPlayers] = useState([]);
@@ -10,6 +12,7 @@ const Players = () => {
   const [formData, setFormData] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newPlayer, setNewPlayer] = useState({ name: "", category: "", university: "" });
+  const { userRole } = useAuth();
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -23,6 +26,11 @@ const Players = () => {
         } else {
           console.error('Error: Expected an array in `data` field but got', response.data);
           setPlayers([]);  // Fallback to an empty array if the data is invalid
+        }
+        if (userRole === 'admin') {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
         }
       } catch (error) {
         console.error('Error fetching players:', error.message);
@@ -101,22 +109,22 @@ const Players = () => {
       <h1 className="text-3xl text-red-600 font-bold mb-4">Player Stats</h1>
 
       {/* Container for the player tabs */}
-      <div className="grid grid-cols-2 gap-6 mb-8">
-        {players.map((player) => (
-          <div
-            key={player._id}  // Use _id from the API response
-            className="bg-gradient-to-r from-red-800 via-maroon-700 to-black p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-red-600"
-            onClick={() => handlePlayerClick(player)}
-          >
-            <div className="flex items-center">
-              <Person fontSize="large" className="mr-2" /> {/* Person Icon */}
-              <span className="text-lg font-semibold">{player.name}</span>
-            </div>
+      <div className="grid grid-cols-2 gap-6 mb-8 h-96 overflow-y-auto">
+  {players.map((player) => (
+    <div
+      key={player._id}
+      className="bg-gradient-to-r from-red-800 via-maroon-700 to-black p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-red-600"
+      onClick={() => handlePlayerClick(player)}
+    >
+      <div className="flex items-center">
+        <Person fontSize="large" className="mr-2" />
+        <span className="text-lg font-semibold">{player.name}</span>
+      </div>
             {isAdmin && (
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent player click
-                  handleDelete(player._id);  // Use _id for delete
+                  e.stopPropagation();
+                  handleDelete(player._id);
                 }}
                 className="absolute top-2 right-2 bg-red-700 px-2 py-1 rounded hover:bg-red-800"
               >
@@ -126,6 +134,7 @@ const Players = () => {
           </div>
         ))}
       </div>
+
 
       {/* Modal for Player Details */}
       {selectedPlayer && (
@@ -227,10 +236,12 @@ const Players = () => {
               />
               <button
                 onClick={handleAddPlayer}
-                className="bg-gradient-to-r from-red-800 via-maroon-700 to-black px-4 py-2 rounded hover:bg-red-600 text-white"
-              >
+                className={`bg-gradient-to-r from-red-800 via-maroon-700 to-black px-4 py-2 rounded hover:bg-red-600 text-white ${
+                  userRole === 'admin' ? 'block' : 'hidden'
+                }`}>
                 ADD Player
               </button>
+
             </div>
           )}
         </div>

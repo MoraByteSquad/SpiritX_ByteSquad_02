@@ -2,7 +2,7 @@ import axios from 'axios';
 // import getTokenData from './tocken';  
 
 // Define base URL for your API
-const API_URL = 'http://localhost:8001/api/v1/player';
+const API_URL = 'http://localhost:8000/api/v1/player';
 
 export const getPlayers = async () => {
     try {

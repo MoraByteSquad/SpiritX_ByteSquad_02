@@ -4,7 +4,7 @@ import {jwtDecode} from 'jwt-decode';
 const getTokenData = async () => {
     try {
         const token = sessionStorage.getItem('token');
-        const token = sessionStorage.getItem('token');
+       
         if (!token) {
             throw new Error('No token found in session storage');
         }
