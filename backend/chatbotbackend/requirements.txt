@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-dotenv
+google-generativeai
+pymongo
+langchain
+langchain-community
+mysql
+pip install mysql-connector-python
