@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import UserTeam from '../models/userTeam.model.js';
 import Player from '../models/player.model.js';
 import PlayerValue from '../models/playerValue.model.js';
+import { updateLeaderboard } from '../util/updateLeaderboard.js';
 
 export const getUserTeam = async (req, res, next) => {
   try {
@@ -31,8 +32,17 @@ export const addPlayerToTeam = async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { id } = req.params;
-    const { playerId } = req.body;
+    const { id } = req.params; // userId from request params
+    const { playerId } = req.body; // playerId from request body
+
+    console.log("Incoming request:", { userId: id, playerId }); // Debugging
+
+    if (!mongoose.Types.ObjectId.isValid(playerId)) {
+      throw new Error("Invalid Player ID format");
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Invalid User ID format");
+    }
 
     if (!playerId) {
       throw new Error("Player ID is required");
@@ -40,10 +50,13 @@ export const addPlayerToTeam = async (req, res, next) => {
 
     // Find player details
     const player = await Player.findById(playerId).session(session);
-    const playerValue = await PlayerValue.findOne({ playerId }).session(session);
+    if (!player) {
+      throw new Error(`Player with ID ${playerId} not found`);
+    }
 
-    if (!player || !playerValue) {
-      throw new Error("Player or player value not found");
+    const playerValue = await PlayerValue.findOne({ playerId }).session(session);
+    if (!playerValue) {
+      throw new Error(`PlayerValue for Player ID ${playerId} not found`);
     }
 
     const { name, category } = player;
@@ -51,13 +64,14 @@ export const addPlayerToTeam = async (req, res, next) => {
 
     // Find user's team within the transaction
     const userTeam = await UserTeam.findOne({ userId: id }).session(session);
-
     if (!userTeam) {
-      throw new Error("User team not found");
+      throw new Error(`User team for User ID ${id} not found`);
     }
 
+    console.log("UserTeam found:", userTeam); // Debugging
+
     // Check if the player is already in the team
-    if (userTeam.players.some(p => p.playerId.toString() === playerId)) {
+    if (userTeam.players.some((p) => p.playerId.toString() === playerId)) {
       throw new Error("Player is already in the team");
     }
 
@@ -73,25 +87,28 @@ export const addPlayerToTeam = async (req, res, next) => {
     userTeam.players.push({ playerId, name, points, category, value });
     userTeam.remainingBudget -= value;
     userTeam.teamSize += 1;
-    userTeam.totalPoints += points;
+    userTeam.totalPoints = userTeam.players.reduce((sum, player) => sum + (player.points || 0), 0);
 
     if (userTeam.teamSize === 11) {
       userTeam.isComplete = true;
+      await updateLeaderboard(id, userTeam.totalPoints);
     }
 
-    await userTeam.save({ session, validateBeforeSave: false });
+    await userTeam.save({ session });
     await session.commitTransaction();
     session.endSession();
+
+    console.log("Player added successfully:", playerId); // Debugging
 
     res.status(201).json({
       success: true,
       message: "Player added successfully",
       data: userTeam,
     });
-
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    console.error("Error in addPlayerToTeam:", error.message); // Debugging
     next(error);
   }
 };
