@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Leaderboard from "./leaderboard.model.js";
 
 const userTeamSchema = new mongoose.Schema({
   userId: {
@@ -56,6 +57,28 @@ const userTeamSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+});
+
+// Update the Leaderboard entry when a UserTeam is updated
+userTeamSchema.post("save", async function (doc, next) {
+  try {
+    // Calculate the total points for the team
+    const totalPoints = doc.players.reduce((sum, player) => sum + player.points, 0);
+
+    // Update the Leaderboard entry for this user
+    await Leaderboard.findOneAndUpdate(
+      { userId: doc.userId }, // Find the Leaderboard entry by userId
+      { 
+        points: totalPoints, // Update the points
+        lastUpdated: new Date(), // Update the lastUpdated timestamp
+      },
+      { upsert: true } // Create a new entry if it doesn't exist
+    );
+
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 const UserTeam = mongoose.model("UserTeam", userTeamSchema, "userTeams");
