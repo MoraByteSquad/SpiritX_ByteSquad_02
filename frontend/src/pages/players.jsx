@@ -32,7 +32,7 @@ const staticPlayers = [
   },
 ];
 
-const PlayerStats = () => {
+const Players = () => {
   const [players, setPlayers] = useState(staticPlayers);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isAdmin, setIsAdmin] = useState(true);
@@ -82,12 +82,8 @@ const PlayerStats = () => {
 
   return (
     <div
-      className="bg-black text-white min-h-screen p-6"
-      style={{
-        backgroundImage: `url(${backgroundImage})`, // Use the imported image here
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="bg-black/50 text-white p-3 my-2 ml-1 mr-2 ring-4 ring-white/50 rounded-sm h-screen flex-col items-center "
+      
     >
       <h1 className="text-3xl text-red-600 font-bold mb-4">Player Stats</h1>
 
@@ -221,7 +217,8 @@ const PlayerStats = () => {
         </div>
       )}
     </div>
+    
   );
 };
 
-export default PlayerStats;
+export default Players;
