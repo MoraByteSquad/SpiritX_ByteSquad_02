@@ -24,6 +24,6 @@ const playerValueSchema = new mongoose.Schema({
   },
 });
 
-const PlayerValue = mongoose.model("PlayerValue", playerValueSchema);
+const PlayerValue = mongoose.model("PlayerValue", playerValueSchema, "playerValues");
 
 export default PlayerValue;

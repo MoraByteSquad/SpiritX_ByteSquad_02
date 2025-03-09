@@ -1,14 +1,8 @@
 import { Router } from "express";
-import { getTeam, addPlayerToUserTeam, deletePlayerFromUserTeam } from "../controllers/userTeam.controller.js";
+import { getLeaderboard } from "../controllers/leaderboard.controller.js";
 
-const userTeamRouter = Router();
+const leaderboardRouter = Router();
 
-userTeamRouter.get('/get-team/:id', getTeam);
+leaderboardRouter.get('/:id', getLeaderboard);
 
-userTeamRouter.post('/add-player/:id', addPlayerToUserTeam);
-
-userTeamRouter.post('/delete-player/:id', deletePlayerFromUserTeam);
-
-userTeamRouter.get('/budjet/:id', getBudjet);
-
-export default userTeamRouter;
+export default leaderboardRouter;

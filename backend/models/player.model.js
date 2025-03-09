@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import PlayerValue from "./playerValue.model.js";
 
 const playerSchema = new mongoose.Schema({
   name: {
@@ -52,6 +53,36 @@ const playerSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const Player = mongoose.model("Player", playerSchema);
+// Create PlayerValue entry after saving a Player
+playerSchema.post("save", async function (doc, next) {
+  try {
+    const playerValue = new PlayerValue({
+      playerId: doc._id,
+      points: 0,
+      category: doc.category,
+      value: 0,
+    });
+
+    await playerValue.save();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Cascade delete PlayerValue when a Player is deleted
+playerSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    const player = await this.model.findOne(this.getFilter());
+    if (player) {
+      await PlayerValue.deleteOne({ playerId: player._id });
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
+const Player = mongoose.model("Player", playerSchema, "players");
 
 export default Player;
