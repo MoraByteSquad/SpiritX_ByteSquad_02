@@ -5,12 +5,22 @@ export const getLeaderboard = async (req, res, next) => {
     const { id } = req.params; // Get user ID from request params
 
     // Fetch the top 50 leaderboard players
-    const leaderboard = await Leaderboard.find().sort({ points: -1 }).limit(50);
+    const leaderboardData = await Leaderboard.find()
+      .select("username points")
+      .sort({ points: -1, lastUpdated: 1 })
+      .limit(10);
+
+    // Add rank field to each entry
+    const leaderboard = leaderboardData.map((entry, index) => ({
+      rank: index + 1, // Rank starts from 1
+      username: entry.username,
+      points: entry.points,
+    }));
 
     // Find the user in the leaderboard
     const user = await Leaderboard.findOne({ userId: id });
 
-    const rank = -1; // Default rank
+    let rank = -1; // Default rank if user is not found
 
     if (user) {
       rank = await Leaderboard.countDocuments({ points: { $gt: user.points } }) + 1;
@@ -20,7 +30,9 @@ export const getLeaderboard = async (req, res, next) => {
       success: true,
       message: "Leaderboard fetched successfully",
       data: leaderboard,
-      rank,  // User's rank
+      rank, // User's rank
+      points: user?.points,
+      username: user?.username,
     });
   } catch (error) {
     next(error);

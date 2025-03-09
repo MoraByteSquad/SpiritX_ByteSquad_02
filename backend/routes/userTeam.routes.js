@@ -13,9 +13,9 @@ const userTeamRouter = Router();
 
 userTeamRouter.get('/get-team/:id', getUserTeam);
 
-userTeamRouter.post('/add-player/:id', addPlayerToTeam);
+userTeamRouter.put('/add-player/:id', addPlayerToTeam);
 
-userTeamRouter.post('/remove-player/:id', removePlayerFromTeam);
+userTeamRouter.put('/remove-player/:id', removePlayerFromTeam);
 
 userTeamRouter.get('/remaining-budget/:id', getRemainingBudget);
 

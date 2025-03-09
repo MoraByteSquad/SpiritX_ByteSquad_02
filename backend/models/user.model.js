@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import UserTeam from "./userTeam.model.js";
+import Leaderboard from "./leaderboard.model.js";
 
 const userSchema = new mongoose.Schema({
   username: {
@@ -27,6 +28,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.post("save", async function (doc, next) {
   try {
+    // Create UserTeam
     const userTeam = new UserTeam({ 
       userId: doc._id,
       remainingBudget: 9000000,
@@ -34,6 +36,16 @@ userSchema.post("save", async function (doc, next) {
     });
 
     await userTeam.save();
+
+    // Create Leaderboard entry
+    const leaderboardEntry = new Leaderboard({
+      userId: doc._id,
+      username: doc.username,
+      points: 0, // Initial points are 0
+      lastUpdated: new Date(), // Set the last updated date to now
+    });
+
+    await leaderboardEntry.save();
 
     next();
   } catch (error) {
