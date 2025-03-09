@@ -130,7 +130,7 @@ export default function Sidebar() {
             </li>
             <li>
               <NavLink
-                to="/tournementSummery"
+                to="/tournamentSummary"
                 className={({ isActive }) =>
                   `flex items-center p-2 rounded-lg group ${
                     isActive
