@@ -1,5 +1,4 @@
 import os
-import json
 from dotenv import load_dotenv
 import google.generativeai as genai
 from fastapi import FastAPI, HTTPException
@@ -7,15 +6,18 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.memory import ConversationBufferMemory
 from pymongo import MongoClient
+from bson.json_util import dumps
 
 app = FastAPI()
 
+ALLOWED_COLLECTIONS = {"players", "playerValues"}
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  
-    allow_headers=["*"],  
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class ChatRequest(BaseModel):
@@ -27,38 +29,22 @@ class ChatResponse(BaseModel):
 # Load environment variables
 load_dotenv()
 
+# Initialize MongoDB connection
+mongo_uri = os.getenv("DB_URI")
+mongo_client = MongoClient(mongo_uri)
+
+db = mongo_client[os.getenv("DB_NAME")]
+
+
 # Initialize conversation memory
 memory = ConversationBufferMemory(return_messages=True)
-
-@app.get("/ping")
-def ping_db():
-    try:
-        # Adjust the URI for your MongoDB Atlas cluster with the correct parameters
-        mongodb_uri=f'mongodb+srv://surajahasarindadev:LWhAP7MsRZxcsCx3@cluster0.a83gl.mongodb.net/SpiritX_ByteSquad_02?retryWrites=true&w=majority&appName=Cluster0'
-        client = MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)
-        # Ping the server
-        client.admin.command('ping')
-        # List collections from the specified database
-        collections = client[os.getenv("DB_NAME")].list_collection_names()
-        return {"status": "success", "collections": collections}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-@app.post("/chat")
-def chat_endpoint(request: ChatRequest):
-    try:
-        print(f"Received message: {request.message}")
-        response = chat_with_llm(request.message)
-        return ChatResponse(response=response)
-    except Exception as e:
-        print(f"Error in chat_endpoint: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 def initialize_gemini():
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if not gemini_api_key:
         raise ValueError("GEMINI_API_KEY is not set in the environment variables.")
     genai.configure(api_key=gemini_api_key)
-    
+
     generation_config = {
         "temperature": 0.7,
         "top_p": 0.9,
@@ -66,7 +52,7 @@ def initialize_gemini():
         "max_output_tokens": 4096,
         "response_mime_type": "text/plain",
     }
-    
+
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
         generation_config=generation_config,
@@ -77,132 +63,130 @@ def summarize_conversation(user_message: str, bot_response: str, model) -> str:
     summary_prompt = f"""Please provide a brief summary of this conversation exchange:
     User: {user_message}
     Bot: {bot_response}
-
-    Summarize the key points in 1-2 sentences."""
     
+    Summarize the key points in 1-2 sentences."""
+
     summary_response = model.generate_content(summary_prompt)
     return summary_response.text
 
-def get_best_team(db):
-    best_players = list(db.players.find({}, {"_id": 0, "points": 0}).sort("points", -1).limit(11))
-    if not best_players:
-        return "I don’t have enough knowledge to answer that question."
-    
-    team_names = [player['name'] for player in best_players]
-    return f"The best possible team is: {', '.join(team_names)}."
+ALLOWED_COLLECTIONS = {"players", "playerValues"}
 
+def get_mongo_schema():
+    schema = {}
+
+    for collection_name in ALLOWED_COLLECTIONS:
+        sample_doc = db[collection_name].find_one()
+        if sample_doc:
+            schema[collection_name] = list(sample_doc.keys())
+        else:
+            schema[collection_name] = ["No documents in this collection"]
+
+    return schema
+
+
+def execute_mongo_query(database, collection: str, query: str):
+    try:
+        query = eval(query)
+
+        if collection not in ALLOWED_COLLECTIONS:
+            return {"error": f"Invalid collection name: {collection}. Allowed collections: {list(ALLOWED_COLLECTIONS)}"}
+
+        if not isinstance(query, list):
+            return {"error": "Query must be a list of dictionaries (valid MongoDB aggregation pipeline)"}
+
+        try:
+            col = database[collection]
+            cursor = col.aggregate(query)  # Ensure query is passed correctly
+            return {collection: list(cursor)}
+        except Exception as e:
+            return {collection: f"Error executing query: {str(e)}"}
+    except Exception as e:
+        return {"error": f"Error executing MongoDB query: {str(e)}"}
 
 def chat_with_llm(user_message: str):
-    # Initialize Gemini model and start chat session
     model = initialize_gemini()
     chat_session = model.start_chat()
     
-    # Connect to MongoDB
-    mongodb_uri=f'mongodb+srv://surajahasarindadev:LWhAP7MsRZxcsCx3@cluster0.a83gl.mongodb.net/SpiritX_ByteSquad_02?retryWrites=true&w=majority&appName=Cluster0'
-    client = MongoClient(mongodb_uri)
-    db = client[os.getenv("DB_NAME")]
-    # Build a rudimentary schema: list collections and sample document keys from each
-    schema_info = {}
-    collections = db.list_collection_names()
-    for coll in collections:
-        sample_doc = db[coll].find_one()
-        schema_info[coll] = list(sample_doc.keys()) if sample_doc else []
-    schema = json.dumps(schema_info, indent=2)
+    schema = get_mongo_schema()
+    print(schema)
     
     try:
-        # Load conversation history
         history = memory.load_memory_variables({})
         history_context = "\n".join([f"{m.type}: {m.content}" for m in history.get("history", [])])
         
-
-        if "best" in user_message.lower() or "best 11" in user_message.lower():
-            return get_best_team(db)
-        # Build a context prompt to generate a MongoDB query
-        context = f"""Based on this MongoDB database schema:
+        context = f"""Based on this MongoDB schema:
         {schema}
-
+        
         Previous conversation:
         {history_context}
-
-        Generate only a MongoDB query in JSON format with the following keys:
-        - If user asking about one player's stats then give him all stats of that player.
-        - "collection": the name of the collection to query
-        - "filter": a JSON object representing the query filter
-        - "projection" (optional): a JSON object representing the projection
-        - Order the players by highest points but do not limit to 11 players.
-
-        Answer the following question: {user_message}
-
-        Return only the JSON query without any markdown formatting or additional explanation."""
         
-        # Get MongoDB query from the model
+        Generate only a MongoDB  query as aggregation pipeline to answer this question: {user_message}
+        Return only the which collection to run aggregation pipeline query in first line 
+        and mongodb aggregation pipeline input in second line onwards
+        without any markdown formatting or explanations.
+        when writing the aggregation pipeline query, keep in mind that in aggregation pipeline, you are only allowed to read data from the database,
+        you are not allowed to write to the database.
+        I use python syntax. so dont send null, send None"""
+        
         response = chat_session.send_message(context)
-        response_text = response.text.strip()
+        mongo_query = response.text.strip()
+
+        print(mongo_query)
+
+        first_line, rest_lines = mongo_query.split("\n", 1) if "\n" in mongo_query else (mongo_query, "")
+
+        query_results = execute_mongo_query(db, first_line, rest_lines)
+
+        print(f"Query results: {query_results}")
         
-        try:
-            mongo_query = json.loads(response_text)
-        except Exception as e:
-            mongo_query = None
-
-        if not mongo_query or "collection" not in mongo_query or "filter" not in mongo_query:
-            # If generated query is not valid, fallback to a general conversational response
-            fallback_context = f"""You are a helpful and friendly customer service chatbot called Spiriter for The Ultimate Inter-University Fantasy Cricket Game. 
-                If you dont have details about user question only say I don’t have enough knowledge to answer that question., please:
-                ask something else.
-
-            The user's question is: {user_message}"""
+        if any(query_results.values()):
+            results_context = f"""Based on this MongoDB query result:
+            {dumps(query_results)}
             
-            return chat_session.send_message(fallback_context).text
-
-        # Execute MongoDB query
-        collection_name = mongo_query.get("collection")
-        query_filter = mongo_query.get("filter", {})
-        projection = mongo_query.get("projection", None)
-        
-        collection = db[collection_name]
-        results_cursor = collection.find(query_filter, projection)
-        results = list(results_cursor)
-        
-        print(f"MongoDB Query: {mongo_query}")
-        print(f"Results: {results}")
-        
-        # Create context with query results for the final answer
-        if results:
-            results_context = f"""Based on this database query result:
-            {json.dumps(results, indent=2)}
-
             Previous conversation:
             {history_context}
-
-            You are a friendly customer service chatbot called Spiriter for The Ultimate Inter-University Fantasy Cricket Game. Please provide a natural, conversational response to this question: {user_message}
-
+            
+            You are a friendly customer service chatbot Spiriter for The Fantasy Cricket team making app: ByteSquadCricket.
+            This is a team making app, based on real stats of players. Users can see the stats of players. And they
+            will make a team based on the stats of players and player prizes inside of given budget of 9,000,000 rupees.
+            player values(prices) are stored in a collection called playerValues.
+            but don't give points of players to users. that is a secret metric. that is the mystery of the game.
+            not revealing points of players to users is a very important thing to do.
+            you will help users on decidng which players to include in their team.
+            or some general queries.
+            Please provide a natural, conversational response to this question: {user_message}
             
             Guidelines:
-            - If user asing about best possible team then give 11 players with highest points without asking another question from user.
-            - Use the query results to provide accurate information.
-            - Do not reveal any sensitive data like personal details or internal records.
-            - Format numbers and dates in a user-friendly way."""
+            - Use the query results to provide accurate information
+            - Maintain a helpful and professional tone
+            - Only share publicly available information
+            - Do not reveal any sensitive data like personal details or internal records
+            - Keep the conversation engaging and suggest relevant follow-up topics
+            - Do not reveal points of players to users
+            - Format numbers and dates in a user-friendly way
+            - try to give brief and concise answers - but with enough details to help users understand what they need to know
+            - if you don't know the answer, say 'I don’t have enough knowledge to answer that question.
+            - give values in rupees' """
         else:
-            results_context = f"""You are a helpful and friendly customer service chatbot called Spiriter for The Ultimate Inter-University Fantasy Cricket Game. 
-            I don’t have enough knowledge to answer that question, please:
-            1. Ask another question.
-            2. Maintain a natural, conversational tone.
-            3. Ensure that the conversation does not reveal players' points under any circumstances.
-            4. Express willingness to help with other questions.
-            5. Don't give any details about users in the database.
-
+            results_context = f"""You are a helpful and friendly customer service chatbot Spiriter for The Fantasy Cricket team making app: ByteSquadCricket.
+            Even though I don't have specific database information for this query, please:
+            1. Maintain a natural, conversational tone
+            2. Acknowledge the user's question
+            3. Suggest alternative topics or questions if appropriate
+            4. Express willingness to help with other questions
+            
+             - if you don't know the answer, say 'I don’t have enough knowledge to answer that question.'
+            
             Previous conversation:
             {history_context}
-
-            The user's question is: {user_message}"""
+            
+            The user's question is: {user_message}
+            
+            Remember to be empathetic, professional, and focus only on publicly available information."""
         
-        # Get final response from the model
         final_response = chat_session.send_message(results_context)
-        
-        # Generate a summary of the conversation exchange
         conversation_summary = summarize_conversation(user_message, final_response.text, model)
         
-        # Save both the full context and the summary to conversation memory
         memory.save_context(
             {"input": f"{user_message}\nSummary: {conversation_summary}"}, 
             {"output": f"{final_response.text}\nSummary: {conversation_summary}"}
@@ -213,6 +197,16 @@ def chat_with_llm(user_message: str):
     except Exception as e:
         raise Exception(f"Error in chat processing: {str(e)}")
 
+@app.post("/chat")
+def chat_endpoint(request: ChatRequest):
+    try:
+        print(f"Received message: {request.message}")
+        response = chat_with_llm(request.message)
+        return ChatResponse(response=response)
+    except Exception as e:
+        print(f"Error in chat_endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
