@@ -3,7 +3,7 @@ import csv from 'csv-parser';
 import axios from 'axios';
 import { DateTime } from 'luxon';
 
-const API_URL = 'http://localhost:8001/api/v1/player'; // Update with your actual API endpoint
+const API_URL = 'http://localhost:8000/api/v1/player'; // Update with your actual API endpoint
 
 const importPlayersFromCSV = (filePath) => {
     const players = [];
