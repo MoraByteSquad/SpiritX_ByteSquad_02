@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { User, Trash2 } from 'lucide-react';
 
-const initialPlayers = [
-  { id: 1, name: 'Player One', role: 'Batsman', stats: 'Runs: 500, Average: 40.0', selected: true },
-  { id: 2, name: 'Player Two', role: 'Bowler', stats: 'Wickets: 20, Economy: 5.0', selected: false },
-  { id: 3, name: 'Player Three', role: 'All-Rounder', stats: 'Runs: 300, Wickets: 15', selected: true },
-  { id: 4, name: 'Player Four', role: 'Wicketkeeper', stats: 'Catches: 50, Stumpings: 10', selected: false },
-];
+
+
 
 export default function TeamPage() {
+  
   const [players, setPlayers] = useState(initialPlayers);
   
   const deletePlayer = (id) => {
@@ -33,7 +30,7 @@ export default function TeamPage() {
                   <p className="text-gray-400">{player.stats}</p>
                 </div>
               </div>
-              <button onClick={() => deletePlayer(player.id)} className="bg-red-700 hover:bg-red-800 text-white p-2 rounded-md transition-all">
+              <button onClick={() => deletePlayer(player.id)} className={`bg-red-700 hover:bg-red-800 text-white p-2 rounded-md transition-all `}>
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
