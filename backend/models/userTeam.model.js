@@ -60,20 +60,27 @@ const userTeamSchema = new mongoose.Schema({
 });
 
 // Update the Leaderboard entry when a UserTeam is updated
-userTeamSchema.post("save", async function (doc, next) {
+userTeamSchema.post("findOneAndUpdate", async function (result, next) {
   try {
-    // Calculate the total points for the team
-    const totalPoints = doc.players.reduce((sum, player) => sum + player.points, 0);
+    // Fetch the updated document explicitly
+    const doc = await this.model.findOne(this.getFilter());
 
-    // Update the Leaderboard entry for this user
-    await Leaderboard.findOneAndUpdate(
-      { userId: doc.userId }, // Find the Leaderboard entry by userId
-      { 
-        points: totalPoints, // Update the points
-        lastUpdated: new Date(), // Update the lastUpdated timestamp
-      },
-      { upsert: true } // Create a new entry if it doesn't exist
-    );
+    if (doc) {
+      console.log("Updated UserTeam Document:", doc);
+
+      // Calculate the total points for the team
+      const totalPoints = doc.players.reduce((sum, player) => sum + player.points, 0);
+
+      // Update the Leaderboard entry for this user
+      await Leaderboard.findOneAndUpdate(
+        { userId: doc.userId }, // Find the Leaderboard entry by userId
+        { 
+          points: totalPoints, // Update the points
+          lastUpdated: new Date(), // Update the lastUpdated timestamp
+        },
+        { upsert: true } // Create a new entry if it doesn't exist
+      );
+    }
 
     next();
   } catch (error) {
