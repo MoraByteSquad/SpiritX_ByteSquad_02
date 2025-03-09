@@ -30,6 +30,30 @@ export const getPlayers = async () => {
         return { success: false, message: error.message, data: [] };  // Return a fallback object
     }
 };
+
+export const getPlayer = async (id) => {
+    try {
+        // Construct the URL with the specific player ID
+        const response = await axios.get(`${API_URL}/get-player/${id}`, {
+            // You can include JWT token in headers if needed
+            // headers: {
+            //     Authorization: `Bearer ${token}`,
+            // }
+        });
+
+        if (response.data.success) {
+            console.log('Player:', response.data);  // Log the response data
+            return response.data;  // If success, return the data
+        } else {
+            throw new Error('Failed to fetch player');
+        }
+
+    } catch (error) {
+        console.error('Error fetching player:', error.message);
+        return { success: false, message: error.message, data: null };  // Return a fallback object
+    }
+};
+
 // Function to create a new player (POST request)
 export const createPlayer = async (playerData) => {
   try {
@@ -53,7 +77,7 @@ export const createPlayer = async (playerData) => {
 // Function to update a player (PUT request)
 export const updatePlayer = async (id, updatedData) => {
     try {
-       
+         console.log('updatedData:', id, updatedData);
         const response = await axios.put(`${API_URL}/update-player/${id}`, updatedData, {
             
                 headers: { 'Content-Type': 'application/json' }, // Pass JWT token in Authorization header
@@ -83,3 +107,49 @@ export const deletePlayer = async (id) => {
         throw error;  // Handle error accordingly
     }
 };
+
+
+export const getTournamentSummary = async () => {
+    try {
+      // Assuming you may need a token, you can uncomment the lines below to fetch it if required
+      // const token = sessionStorage.getItem('token');  // Get JWT token from sessionStorage
+      // if (!token) {
+      //   throw new Error("No token found");
+      // }
+  //http://localhost:8000/api/v1/player/get-tournament-summary
+      const response = await axios.get(`${API_URL}/get-tournament-summary`, {
+        // headers: {
+        //     Authorization: `Bearer ${token}`,  // Uncomment to pass token in the header if necessary
+        // }
+      });
+  
+      if (response.data) {
+        console.log('Tournament Summary:', response.data);  // Log the response data
+        return response.data;  // If success, return the data
+      } else {
+        throw new Error('Failed to fetch tournament summary');
+      }
+  
+    } catch (error) {
+      console.error('Error fetching tournament summary:', error.message);
+      return { success: false, message: error.message, data: {} };  // Return a fallback object
+    }
+  };
+
+  export const getRemainingBudget = async (userId) => {
+    try {
+      const response = await axios.get(`${API_URL}/get-remaining-budget/${userId}`);
+  
+      if (response.data.success) {
+        console.log('Remaining budget:', response.data);
+        return response.data;  // Return remaining budget data
+      } else {
+        throw new Error('Failed to fetch remaining budget');
+      }
+    } catch (error) {
+      console.error('Error fetching remaining budget:', error.message);
+      return { success: false, message: error.message, data: null };  // Return fallback object
+    }
+  };
+  
+
