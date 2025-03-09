@@ -4,6 +4,7 @@ import Footer from './components/Footer'
 import React from 'react';
 import SignupImage from './assets/signup.jpg'; 
 import { Outlet } from 'react-router-dom';
+import ChatBot from './components/Chatbot';
 
 const RootLayout = () => {
   return (
@@ -23,6 +24,10 @@ const RootLayout = () => {
       <main className='flex-1  z-10'>
         <Outlet />
       </main>
+      <div className='z-40'>
+        <ChatBot />
+      </div>
+      
       <footer className='z-20'>
         <Footer />
       </footer>
