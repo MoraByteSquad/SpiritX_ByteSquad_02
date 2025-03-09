@@ -163,3 +163,80 @@ export const updatePlayer = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTournamentSummary = async (req, res, next) => {
+  try {
+    // Aggregate data for overall runs, overall wickets, highest run scorer, and highest wicket taker
+    const tournamentSummary = await Player.aggregate([
+      {
+        $group: {
+          _id: null, // Group all players together
+          overallRuns: { $sum: "$stats.Total Runs" }, // Sum of all players' runs
+          overallWickets: { $sum: "$stats.Wickets" }, // Sum of all players' wickets
+          highestRunScorer: {
+            $push: {
+              name: "$name",
+              runs: "$stats.Total Runs",
+            },
+          },
+          highestWicketTaker: {
+            $push: {
+              name: "$name",
+              wickets: "$stats.Wickets",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0, // Exclude the _id field
+          overallRuns: 1,
+          overallWickets: 1,
+          highestRunScorer: {
+            $reduce: {
+              input: "$highestRunScorer",
+              initialValue: { name: "", runs: 0 },
+              in: {
+                $cond: [
+                  { $gt: ["$$this.runs", "$$value.runs"] },
+                  { name: "$$this.name", runs: "$$this.runs" },
+                  "$$value",
+                ],
+              },
+            },
+          },
+          highestWicketTaker: {
+            $reduce: {
+              input: "$highestWicketTaker",
+              initialValue: { name: "", wickets: 0 },
+              in: {
+                $cond: [
+                  { $gt: ["$$this.wickets", "$$value.wickets"] },
+                  { name: "$$this.name", wickets: "$$this.wickets" },
+                  "$$value",
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    // If no players are found, return an empty summary
+    if (tournamentSummary.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          overallRuns: 0,
+          overallWickets: 0,
+          highestRunScorer: { name: "", runs: 0 },
+          highestWicketTaker: { name: "", wickets: 0 },
+        },
+      });
+    }
+
+    res.status(200).json({ success: true, data: tournamentSummary[0] });
+  } catch (error) {
+    next(error);
+  }
+};
