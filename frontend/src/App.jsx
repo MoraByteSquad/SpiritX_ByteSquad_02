@@ -7,7 +7,7 @@ import LeaderBoard from "./pages/leaderBoard";
 import Players from "./pages/players";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
-import PerformanceSummery from "./pages/performanceSummery";
+import TournamentSummary from "./pages/tournamentSummary";
 import PlayerProfile from "./pages/playerProfile";
 import SelectTeam from "./pages/selectTeam";
 import Team from "./pages/team";
@@ -36,14 +36,16 @@ function App() {
               <Route path="editPlayer" element={<EditPlayer />} />
               <Route path="leaderBoard" element={<LeaderBoard />} />
               <Route path="players" element={<Players />} />
-              <Route path="performanceSummery" element={<PerformanceSummery />} />
+              <Route path="tournamentSummary" element={<TournamentSummary />} />
               <Route path="playerProfile" element={<PlayerProfile />} />
               <Route path="selectTeam" element={<SelectTeam />} />
               <Route path="team" element={<Team />} />
             </Route>
 
+
             {/* Catch-all Route inside RootLayout */}
             <Route path="*" element={<NotFound />} />
+
           </Route>
         </Routes>
       </Router>
