@@ -15,28 +15,34 @@ function SelectTeam() {
   };
 
   return (
-    <div className="bg-black/50 text-white p-3 my-2 ml-1 mr-2 ring-4 ring-white/50 rounded-sm min-h-screen flex flex-col items-center overflow-auto w-full">
-      <h1 className="text-2xl font-bold mb-4 text-red-500 text-center">Select Your Team</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-6xl px-4">
+    <div className="bg-black/50 text-white p-3 my-2 ml-1 mr-2 ring-4 ring-white/50 rounded-sm min-h-screen flex flex-col items-center w-full">
+      <h1 className='text-3xl font-bold m-3 mb-8 text-center uppercase'>Select Your Team</h1>
+      
+      {/* Players List */}
+      <ul className="w-full max-w-2xl bg-white/10 rounded-md p-4 space-y-3">
         {team.map(player => (
-          <div 
+          <li 
             key={player.id} 
-            className={`p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center text-center 
-              ${player.selected ? 'bg-gradient-to-r from-red-800 via-maroon-700 to-black' : 'bg-gray-900'} 
-              hover:bg-red-600 w-full max-w-xs mx-auto`} 
+            className={`flex justify-between items-center p-4 rounded-md text-lg cursor-pointer transition-all 
+              ${player.selected ? 'bg-gradient-to-r from-red-800 via-maroon-700 to-black' : 'bg-black/30'} 
+              hover:bg-red-600`} 
             onClick={() => toggleSelection(player.id)}
           >
-            <User className="w-12 h-12 text-white mb-2" />
-            <h2 className="text-xl font-bold">{player.name}</h2>
-            <p className="text-gray-300">{player.position}</p>
-            <p className="text-gray-400">{player.stats}</p>
-            <button className={`mt-2 px-4 py-2 rounded text-white transition-all w-full 
-              ${player.selected ? 'bg-red-700' : 'bg-black hover:bg-gray-700'}`}>
+            <div className="flex items-center space-x-4">
+              <User className="w-10 h-10 text-white" />
+              <div>
+                <h2 className="text-xl font-bold">{player.name}</h2>
+                <p className="text-gray-300">{player.position}</p>
+                <p className="text-gray-400">{player.stats}</p>
+              </div>
+            </div>
+            <button className={`px-4 py-2 rounded text-white transition-all 
+              ${player.selected ? 'bg-red-700' : 'bg-black hover:bg-gray-700'}`}> 
               {player.selected ? 'Selected' : 'Select'}
             </button>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }

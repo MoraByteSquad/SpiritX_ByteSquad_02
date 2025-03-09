@@ -46,15 +46,16 @@ function LeaderBoard() {
             </tr>
           ))}
 
-        {
-          (rank > 10)?(
-            <tr className="bg-white/10 border-b border-green-500">
-              <td className="p-2">{userRank}</td>
-              <td className="p-2">{user}</td>
-              <td className="p-2">{user.points}</td>
-            </tr>
-          ):null
-        }
+          {
+            (userRank > 50) ? ( // Changed "rank" to "userRank"
+              <tr className="bg-white/10 border-b border-green-500">
+                <td className="p-2">{userRank}</td>
+                <td className="p-2">{user}</td>
+                <td className="p-2">N/A</td> {/* Replace user.points to avoid errors if user is not in leaderboard */}
+              </tr>
+            ) : null
+          }
+
 
 
           <tr className="bg-white/10 border-b border-gray-700">

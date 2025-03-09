@@ -34,6 +34,25 @@ export default function Sidebar() {
       >
         <div className="h-full px-3 py-4 overflow-y-auto">
           <ul className="space-y-2 font-medium">
+          <li>
+              <NavLink
+                to="/players"
+                className={({ isActive }) =>
+                  `flex items-center p-2 rounded-lg group ${
+                    isActive
+                      ? "border bg-red-500/20 border-red-200 dark:border-red-800"
+                      : "text-gray-100 dark:text-white hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
+                  }`
+                }
+              >
+                {/* Edit Players - Pencil Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                  <path fillRule="evenodd" d="M2 13.5V17h3.5l9.293-9.293-3.5-3.5L2 13.5z" clipRule="evenodd" />
+                </svg>
+                <span className="flex-1 ms-3 whitespace-nowrap">Players</span>
+              </NavLink>
+            </li>
             <li>
               <NavLink
                 to="/team"
@@ -50,7 +69,7 @@ export default function Sidebar() {
                   <path d="M13 7a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path fillRule="evenodd" d="M4 13a4 4 0 014-4h4a4 4 0 014 4v1H4v-1z" clipRule="evenodd" />
                 </svg>
-                <span className="flex-1 ms-3 whitespace-nowrap">Team Select</span>
+                <span className="flex-1 ms-3 whitespace-nowrap">Your Team</span>
               </NavLink>
             </li>
             <li>
@@ -89,25 +108,7 @@ export default function Sidebar() {
                 <span className="flex-1 ms-3 whitespace-nowrap">Leaderboard</span>
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                to="/players"
-                className={({ isActive }) =>
-                  `flex items-center p-2 rounded-lg group ${
-                    isActive
-                      ? "border bg-red-500/20 border-red-200 dark:border-red-800"
-                      : "text-gray-100 dark:text-white hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
-                  }`
-                }
-              >
-                {/* Edit Players - Pencil Icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                  <path fillRule="evenodd" d="M2 13.5V17h3.5l9.293-9.293-3.5-3.5L2 13.5z" clipRule="evenodd" />
-                </svg>
-                <span className="flex-1 ms-3 whitespace-nowrap">Players</span>
-              </NavLink>
-            </li>
+            
             <li>
               <NavLink
                 to="/selectTeam"
@@ -124,12 +125,12 @@ export default function Sidebar() {
                   <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                   <path fillRule="evenodd" d="M2 13.5V17h3.5l9.293-9.293-3.5-3.5L2 13.5z" clipRule="evenodd" />
                 </svg>
-                <span className="flex-1 ms-3 whitespace-nowrap">Select Team Members</span>
+                <span className="flex-1 ms-3 whitespace-nowrap">Select Players</span>
               </NavLink>
             </li>
             <li>
               <NavLink
-                to="/performanceSummery"
+                to="/tournementSummery"
                 className={({ isActive }) =>
                   `flex items-center p-2 rounded-lg group ${
                     isActive
@@ -143,7 +144,7 @@ export default function Sidebar() {
                   <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                   <path fillRule="evenodd" d="M2 13.5V17h3.5l9.293-9.293-3.5-3.5L2 13.5z" clipRule="evenodd" />
                 </svg>
-                <span className="flex-1 ms-3 whitespace-nowrap">Performance Summery</span>
+                <span className="flex-1 ms-3 whitespace-nowrap">Tournement Summery</span>
               </NavLink>
             </li>
           </ul>
