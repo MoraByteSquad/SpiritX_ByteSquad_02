@@ -1,45 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Delete, Edit, Save, AddCircle, Person } from "@mui/icons-material";
-import backgroundImage from '../assets/wallpapers/4.jpg'; // Import the image here
-
-// Static players data
-const staticPlayers = [
-  {
-    id: 1,
-    name: "Player 1",
-    category: "Batsman",
-    stats: {
-      "Total Runs": 1500,
-      "Balls Faced": 1200,
-      "Innings Played": 50,
-      "Wickets": 10,
-      "Overs Bowled": 50,
-      "Runs Conceded": 200,
-    },
-  },
-  {
-    id: 2,
-    name: "Player 2",
-    category: "Bowler",
-    stats: {
-      "Total Runs": 800,
-      "Balls Faced": 600,
-      "Innings Played": 30,
-      "Wickets": 25,
-      "Overs Bowled": 120,
-      "Runs Conceded": 150,
-    },
-  },
-];
+import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/team';  // Import API functions
 
 const Players = () => {
-  const [players, setPlayers] = useState(staticPlayers);
+  const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [isAdmin, setIsAdmin] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newPlayer, setNewPlayer] = useState({ name: "", category: "" });
+  const [newPlayer, setNewPlayer] = useState({ name: "", category: "", university: "" });
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      try {
+        const response = await getPlayers();  // Fetch data from API
+        console.log(response);  // Log the entire response for inspection
+        
+        // Check if the response is successful and if 'data' is an array
+        if (response.success && Array.isArray(response.data)) {
+          setPlayers(response.data);  // Access the `data` field from the response
+        } else {
+          console.error('Error: Expected an array in `data` field but got', response.data);
+          setPlayers([]);  // Fallback to an empty array if the data is invalid
+        }
+      } catch (error) {
+        console.error('Error fetching players:', error.message);
+        setPlayers([]);  // Fallback to an empty array if there is an error
+      }
+    };
+
+    fetchPlayers();
+  }, []);
 
   const handlePlayerClick = (player) => {
     setSelectedPlayer(player);
@@ -48,50 +40,71 @@ const Players = () => {
   };
 
   const handleEdit = () => setEditMode(true);
-  const handleSave = () => {
-    setPlayers(players.map((p) => (p.id === formData.id ? formData : p)));
-    setSelectedPlayer(formData);
-    setEditMode(false);
-  };
 
-  const handleDelete = (id) => {
+  const handleSave = async () => {
+    try {
+      const response = await updatePlayer(formData._id, formData); // Call API to update
+  
+      if (response && response.success && response.data) {
+        setPlayers(players.map((p) => (p._id === response.data._id ? response.data : p))); // Update UI with response
+        setSelectedPlayer(response.data);
+        setEditMode(false);
+      } else {
+        console.error("Error: Unexpected response format", response);
+      }
+    } catch (error) {
+      console.error("Error saving player:", error.message);
+    }
+  };
+  
+
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this player?")) {
-      setPlayers(players.filter((p) => p.id !== id));
-      setSelectedPlayer(null);
+      try {
+        await deletePlayer(id);  // Delete player via API
+        setPlayers(players.filter((p) => p._id !== id));  // Remove player from local state
+        setSelectedPlayer(null);
+      } catch (error) {
+        console.error('Error deleting player:', error.message);
+      }
     }
   };
 
-  const handleAddPlayer = () => {
-    const newPlayerData = {
-      id: players.length + 1,
-      name: newPlayer.name,
-      category: newPlayer.category,
-      stats: {
-        "Total Runs": 0,
-        "Balls Faced": 0,
-        "Innings Played": 0,
-        "Wickets": 0,
-        "Overs Bowled": 0,
-        "Runs Conceded": 0,
-      },
-    };
-    setPlayers([...players, newPlayerData]);
-    setNewPlayer({ name: "", category: "" });
-    setShowAddForm(false);
+  const handleAddPlayer = async () => {
+    if (!newPlayer.name || !newPlayer.category || !newPlayer.university) {
+      alert("Please fill out all fields!");
+      return;
+    }
+  
+    try {
+      console.log("Adding player:", newPlayer);
+      const response = await createPlayer(newPlayer);  // API call
+      
+      if (response && response.success && response.data) {
+        setPlayers([...players, response.data]);  // Update UI with new player
+        setNewPlayer({ name: "", category: "", university: "" });  // Reset form
+        setShowAddForm(false);  // Hide the form after adding
+        alert("Player added successfully!");
+      } else {
+        console.error("Error: Player creation failed, unexpected response", response);
+      }
+    } catch (error) {
+      console.error("Error adding player:", error.message);
+    }
   };
+  
+  
+  
 
   return (
-    <div
-      className="bg-black/50 text-white p-3 my-2 ml-1 mr-2 ring-4 ring-white/50 rounded-sm h-screen flex-col items-center "
-      
-    >
+    <div className="bg-black/50 text-white p-3 my-2 ml-1 mr-2 ring-4 ring-white/50 rounded-sm h-screen flex-col items-center">
       <h1 className="text-3xl text-red-600 font-bold mb-4">Player Stats</h1>
 
       {/* Container for the player tabs */}
       <div className="grid grid-cols-2 gap-6 mb-8">
         {players.map((player) => (
           <div
-            key={player.id}
+            key={player._id}  // Use _id from the API response
             className="bg-gradient-to-r from-red-800 via-maroon-700 to-black p-4 rounded-lg text-white relative flex items-center justify-between cursor-pointer transition-all transform hover:scale-105 hover:bg-red-600"
             onClick={() => handlePlayerClick(player)}
           >
@@ -103,7 +116,7 @@ const Players = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent player click
-                  handleDelete(player.id);
+                  handleDelete(player._id);  // Use _id for delete
                 }}
                 className="absolute top-2 right-2 bg-red-700 px-2 py-1 rounded hover:bg-red-800"
               >
@@ -206,18 +219,23 @@ const Players = () => {
                 value={newPlayer.category}
                 onChange={(e) => setNewPlayer({ ...newPlayer, category: e.target.value })}
               />
+              <input
+                className="bg-gray-700 p-2 text-white w-full mb-2"
+                placeholder="University"
+                value={newPlayer.university}
+                onChange={(e) => setNewPlayer({ ...newPlayer, university: e.target.value })}
+              />
               <button
                 onClick={handleAddPlayer}
                 className="bg-gradient-to-r from-red-800 via-maroon-700 to-black px-4 py-2 rounded hover:bg-red-600 text-white"
               >
-                Save Player
+                ADD Player
               </button>
             </div>
           )}
         </div>
       )}
     </div>
-    
   );
 };
 
