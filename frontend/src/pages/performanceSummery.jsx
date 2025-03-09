@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Grid, Box } from '@mui/material';
 import { ArrowUpward, SportsCricket } from '@mui/icons-material';
 import background from '../assets/wallpapers/2.jpg'; // Add your image path here
 
-const TournamentSummary = () => {
+const PerformanceSummery = () => {
   const [stats, setStats] = useState({
     totalRuns: 0,
     totalWickets: 0,
@@ -34,18 +34,7 @@ const TournamentSummary = () => {
       }}
     >
       <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundImage: `url(${background})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.9, // Adjust the opacity here
-          zIndex: -1,
-        }}
+        className="bg-gradient-to-r from-maroon-600 py-24 sm:py-32"
       />
       <div className="w-full max-w-7xl p-4 sm:p-8" style={{ textAlign: 'center' }}>
         <Typography variant="h4" sx={{ color: 'orange', mb: 8 }}>
@@ -66,6 +55,12 @@ const TournamentSummary = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(to right, #C70039, #900000, #3A0000)',
+                  opacity: 0.8,
+                  boxShadow: 8,
+                },
               }}
             >
               <CardContent>
@@ -94,6 +89,12 @@ const TournamentSummary = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(to right, #C70039, #900000, #3A0000)',
+                  opacity: 0.8,
+                  boxShadow: 8,
+                },
               }}
             >
               <CardContent>
@@ -122,6 +123,12 @@ const TournamentSummary = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(to right, #C70039, #900000, #3A0000)',
+                  opacity: 0.8,
+                  boxShadow: 8,
+                },
               }}
             >
               <CardContent>
@@ -147,6 +154,12 @@ const TournamentSummary = () => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(to right, #C70039, #900000, #3A0000)',
+                  opacity: 0.8,
+                  boxShadow: 8,
+                },
               }}
             >
               <CardContent>
@@ -165,4 +178,4 @@ const TournamentSummary = () => {
   );
 };
 
-export default TournamentSummary;
+export default PerformanceSummery;
