@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { DB_URI } from '../config/env.js';
 
 if (!DB_URI) {
-  throw new Error("Please define the DB_URI environment variable inside .env.local");
+  throw new Error("Please define the DB_URI environment variable inside .env file");
 }
 
 const connectDB = async () => {
