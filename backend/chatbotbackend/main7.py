@@ -10,6 +10,8 @@ from bson.json_util import dumps
 
 app = FastAPI()
 
+ALLOWED_COLLECTIONS = {"players", "playerValues"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,7 +44,7 @@ def initialize_gemini():
     if not gemini_api_key:
         raise ValueError("GEMINI_API_KEY is not set in the environment variables.")
     genai.configure(api_key=gemini_api_key)
-    
+
     generation_config = {
         "temperature": 0.7,
         "top_p": 0.9,
@@ -50,7 +52,7 @@ def initialize_gemini():
         "max_output_tokens": 4096,
         "response_mime_type": "text/plain",
     }
-    
+
     model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
         generation_config=generation_config,
@@ -63,47 +65,43 @@ def summarize_conversation(user_message: str, bot_response: str, model) -> str:
     Bot: {bot_response}
     
     Summarize the key points in 1-2 sentences."""
-    
+
     summary_response = model.generate_content(summary_prompt)
     return summary_response.text
 
+ALLOWED_COLLECTIONS = {"players", "playerValues"}
+
 def get_mongo_schema():
-
     schema = {}
-    
-    collections = db.list_collection_names()
-    print(collections)
-    
-    if not collections:
-        print("No collections found in the database.")
-        return {"error": "No collections found."}
 
-    for collection_name in collections:
+    for collection_name in ALLOWED_COLLECTIONS:
         sample_doc = db[collection_name].find_one()
         if sample_doc:
             schema[collection_name] = list(sample_doc.keys())
         else:
             schema[collection_name] = ["No documents in this collection"]
-    
+
     return schema
 
 
-
-
-def execute_mongo_query(query: str):
+def execute_mongo_query(database, collection: str, query: str):
     try:
-        # Execute query in all collections
-        results = {}
-        for collection_name in db.list_collection_names():
-            try:
-                collection = db[collection_name]
-                cursor = collection.aggregate([query])  # Assuming the query is a valid MongoDB aggregation pipeline
-                results[collection_name] = list(cursor)
-            except Exception as e:
-                results[collection_name] = f"Error executing query: {str(e)}"
-        return results
+        query = eval(query)
+
+        if collection not in ALLOWED_COLLECTIONS:
+            return {"error": f"Invalid collection name: {collection}. Allowed collections: {list(ALLOWED_COLLECTIONS)}"}
+
+        if not isinstance(query, list):
+            return {"error": "Query must be a list of dictionaries (valid MongoDB aggregation pipeline)"}
+
+        try:
+            col = database[collection]
+            cursor = col.aggregate(query)  # Ensure query is passed correctly
+            return {collection: list(cursor)}
+        except Exception as e:
+            return {collection: f"Error executing query: {str(e)}"}
     except Exception as e:
-        raise Exception(f"Error executing MongoDB query: {str(e)}")
+        return {"error": f"Error executing MongoDB query: {str(e)}"}
 
 def chat_with_llm(user_message: str):
     model = initialize_gemini()
@@ -122,13 +120,22 @@ def chat_with_llm(user_message: str):
         Previous conversation:
         {history_context}
         
-        Generate only a MongoDB  query to answer this question: {user_message}
-        Return only the MongoDB query without any markdown formatting or explanations."""
+        Generate only a MongoDB  query as aggregation pipeline to answer this question: {user_message}
+        Return only the which collection to run aggregation pipeline query in first line 
+        and mongodb aggregation pipeline input in second line onwards
+        without any markdown formatting or explanations.
+        when writing the aggregation pipeline query, keep in mind that in aggregation pipeline, you are only allowed to read data from the database,
+        you are not allowed to write to the database."""
         
         response = chat_session.send_message(context)
         mongo_query = response.text.strip()
-        print(f"Generated MongoDB query: {mongo_query}")
-        query_results = execute_mongo_query(mongo_query)
+
+        print(mongo_query)
+
+        first_line, rest_lines = mongo_query.split("\n", 1) if "\n" in mongo_query else (mongo_query, "")
+
+        query_results = execute_mongo_query(db, first_line, rest_lines)
+
         print(f"Query results: {query_results}")
         
         if any(query_results.values()):
@@ -138,7 +145,15 @@ def chat_with_llm(user_message: str):
             Previous conversation:
             {history_context}
             
-            You are a friendly customer service chatbot for Spiriter for The Ultimate Inter-University Fantasy Cricket Game. Please provide a natural, conversational response to this question: {user_message}
+            You are a friendly customer service chatbot Spiriter for The Fantasy Cricket team making app: ByteSquadCricket.
+            This is a team making app, based on real stats of players. Users can see the stats of players. And they
+            will make a team based on the stats of players and player prizes inside of given budget of 9,000,000 rupees.
+            player values(prices) are stored in a collection called playerValues.
+            but don't give points of players to users. that is a secret metric. that is the mystery of the game.
+            not revealing points of players to users is a very important thing to do.
+            you will help users on decidng which players to include in their team.
+            or some general queries.
+            Please provide a natural, conversational response to this question: {user_message}
             
             Guidelines:
             - Use the query results to provide accurate information
@@ -146,14 +161,20 @@ def chat_with_llm(user_message: str):
             - Only share publicly available information
             - Do not reveal any sensitive data like personal details or internal records
             - Keep the conversation engaging and suggest relevant follow-up topics
-            - Format numbers and dates in a user-friendly way"""
+            - Do not reveal points of players to users
+            - Format numbers and dates in a user-friendly way
+            - try to give brief and concise answers - but with enough details to help users understand what they need to know
+            - if you don't know the answer, say 'I don’t have enough knowledge to answer that question.
+            - give values in rupees' """
         else:
-            results_context = f"""You are a helpful and friendly customer service chatbot for Spiriter for The Ultimate Inter-University Fantasy Cricket Game. 
+            results_context = f"""You are a helpful and friendly customer service chatbot Spiriter for The Fantasy Cricket team making app: ByteSquadCricket.
             Even though I don't have specific database information for this query, please:
             1. Maintain a natural, conversational tone
             2. Acknowledge the user's question
             3. Suggest alternative topics or questions if appropriate
             4. Express willingness to help with other questions
+            
+             - if you don't know the answer, say 'I don’t have enough knowledge to answer that question.'
             
             Previous conversation:
             {history_context}

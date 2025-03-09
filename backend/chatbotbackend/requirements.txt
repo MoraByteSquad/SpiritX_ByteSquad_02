@@ -6,4 +6,3 @@ pymongo
 langchain
 langchain-community
 mysql
-pip install mysql-connector-python
